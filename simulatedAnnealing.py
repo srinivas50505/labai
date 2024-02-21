@@ -1,55 +1,19 @@
-import math
-import random
+import random,math
 
-def simulated_annealing(initial_state, cost_function, temperature, cooling_rate, iterations):
-    current_state = initial_state
-    best_state = current_state
-    current_cost = cost_function(current_state)
-    best_cost = current_cost
+def acceptance_probability(old, new, t): return math.exp((old - new) / t)
+def generate_neighbor(sol): a,b=random.sample(range(len(sol)),2);sol[a],sol[b]=sol[b],sol[a];return sol
 
-    for i in range(iterations):
-        temperature *= cooling_rate
+def simulated_annealing(sol, cost_func, max_iter, t, cooling_rate):
+    current = best = sol
+    for _ in range(max_iter):
+        new = generate_neighbor(current)
+        old, new_cost = cost_func(current), cost_func(new)
+        if acceptance_probability(old, new_cost, t) > random.random(): current = new
+        if new_cost < cost_func(best): best = new
+        t *= cooling_rate
+    return best
 
-        neighbor_state = generate_neighbor(current_state)
-        neighbor_cost = cost_function(neighbor_state)
-
-        if neighbor_cost < current_cost or random.random() < math.exp((current_cost - neighbor_cost) / temperature):
-            current_state = neighbor_state
-            current_cost = neighbor_cost
-
-        if current_cost < best_cost:
-            best_state = current_state
-            best_cost = current_cost
-
-    return best_state, best_cost
-
-def distance(city1, city2):
-    # Euclidean distance between two cities
-    return math.sqrt((city1[0] - city2[0])**2 + (city1[1] - city2[1])**2)
-
-def total_distance(route):
-    # Calculate the total distance of a route
-    total = 0
-    for i in range(len(route) - 1):
-        total += distance(route[i], route[i + 1])
-    return total
-
-def generate_neighbor(route):
-    # Generate a neighboring route by swapping two cities
-    neighbor = route.copy()
-    i, j = random.sample(range(len(route)), 2)
-    neighbor[i], neighbor[j] = neighbor[j], neighbor[i]
-    return neighbor
-
-# Example usage for TSP:
-cities = [(0, 0), (1, 2), (3, 1), (5, 2), (2, 4)]
-
-initial_state = random.sample(cities, len(cities))
-initial_temperature = 100.0
-cooling_rate = 0.95
-iterations = 1000
-
-best_route, best_distance = simulated_annealing(initial_state, total_distance, initial_temperature, cooling_rate, iterations)
-
-print("Best Route:", best_route)
-print("Best Distance:", best_distance)
+initial, max_iter, t, cooling_rate = [1, 2, 3, 4, 5], 1000, 1.0, 0.95
+best_solution = simulated_annealing(initial, sum, max_iter, t, cooling_rate)
+print("Best solution:", best_solution)
+print("Cost:", sum(best_solution))
